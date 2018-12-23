@@ -58,7 +58,7 @@ module emu
 
 `include "build_id.v" 
 localparam CONF_STR = {
-   "PDP1 EMULATOR;;",
+   "PDP1;;",
    "-;",
    "F,PDPRIMBIN;",
    "T5,Enable RIM mode;",

@@ -1,4 +1,7 @@
-    ioh=iot i
+pong game, v1.1 written by Hrvoje Cavrak, 12/2018
+
+	ioh=iot i
+	szm=sza sma-szf	
 
 define swap
 	rcl 9s
@@ -17,33 +20,25 @@ define  point A, B
 	sal 8s
 
 	dpy-i 300
+	ioh
 	terminate
 
-define  plot X, Y
-	law Y
-	sub maxdown
-	sal 8s
-
-	swap
-
-	law X
-	sal 8s
-	dpy-i
-
-	cma
-	dpy-i 
-
-	terminate
 
 
 / 5 points
 define  circle A, B
-	point 1, 1
-
 	point 0, 1
+	point 0, 3
+	
+	point 4, 1
+	point 4, 3
+
 	point 1, 0
-	point 2, 1
-	point 1, 2
+	point 1, 3
+	
+	point 1, 4
+	point 3, 4
+
 	terminate
 
 define paddle X, Y				/ Draws paddles
@@ -60,28 +55,33 @@ pdloop,
 
 	lac X
 	dpy-i 300
+	ioh
 
+	law 6
+	add p1cnt
+	dac p1cnt
 	isp p1cnt
-	isp p1cnt
-	isp p1cnt
+
 	jmp pdloop+R
 	terminate
 
-define line C, D
- 	law 5	
+define line C, D				/ Central line which acts as the "net"
+ 	law 0	
+	sub maxdown 
 	sub maxdown 
 	dac p1cnt
 
 ploop2,
 	lac p1cnt
-	add halfscrn 
+	add maxdown 
 	sal 9s
 
 	swap
 	law D
 	dpy
+	ioh
 	
-	law 37 
+	law 70 
 	add p1cnt
 	dac p1cnt
 
@@ -117,7 +117,7 @@ loop,   circle
 
 	jsp move
 
-	line halfscrn, 0
+	line 0, 0
 	
 	jmp loop
 
@@ -178,6 +178,10 @@ mvup,	dap upret				/ Move pad UP
 	lac pdly
 	add padoff
 	dac pdly
+
+	add random				/ Use pad coordinates as user provided randomness
+	dac random
+
 upret, jmp .
 
 mvdown,	dap downret
@@ -188,6 +192,9 @@ mvdown,	dap downret
 	lac pdly
 	sub padoff
 	dac pdly
+	
+	add random				/ Use pad coordinates as user provided randomness
+	dac random
 downret, jmp .
 
 
@@ -204,19 +211,42 @@ dlyret, jmp .
 
 restart,
 	jsp delay
+	idx iter				/ Count the number of restarts
+
+	lac random				
+	and dymask
+	add one					/ Don't want it to be 0
+	dac dy	
 
 	cla
-	dac y
-
-	law 600 
 	dac x
 
+	lac random
+	and ymask
+	sub maxdown
+	dac y
+	
+	lac iter
+	and one
+	sza
+	jmp rr
+	
+rl,
 	law 2	
 	cma
 	dac dx
-	law 3
-	dac dy
 
+	add offscrn 
+	dac x
+
+	jmp ckret
+rr,
+	law 2
+	dac dx	
+
+	sub offscrn
+	dac x
+	
 	jmp ckret
 
 
@@ -224,6 +254,7 @@ restart,
 hitpaddle, dap ckret				/ Check for colision with paddle
 	lac y
 	sub pdly
+	sub one
 	spa					/ must be true: y - pdl1y > 0
 	jmp restart				/ return if not
 
@@ -241,7 +272,7 @@ hitpaddle, dap ckret				/ Check for colision with paddle
 	law 3					/ if 3 - dirchng < 0 (every 3 hits from right paddle), increase speed 
 	sub dirchng
 	spa
-	idx dx
+	idx dx 
 	spa
 	dzm dirchng				/ Reset dirchng counter back to zero, everything starts from scratch
 skipfast,
@@ -262,7 +293,7 @@ skipfast,
 	cma
 
 	dac dy					/ Set new y bounce angle
-
+	
 ckret,  jmp .
 
 
@@ -303,14 +334,16 @@ cyret, jmp .
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-x,		000000
+x,		000500
 y,		000000
 
-dx,		000002
+dx,		777775	
 dy,		000003
 
-padx,   	000000
-padoff, 	000003
+iter,		000000
+
+padoff, 	000004
+random,		000001
 
 pdly,		000000
 
@@ -330,9 +363,12 @@ one,		000001
 
 maxright,  	000764
 maxdown,   	000764
-halfscrn,	000400
 
-limitup,	000552
+offscrn,	000500
+dymask,		000003
+ymask,		000777
+
+limitup,	000562
 limitdown,	000760
 
 leftdown,   	000001

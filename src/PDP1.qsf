@@ -359,7 +359,7 @@ set_global_assignment -name VERILOG_FILE memory.v
 set_global_assignment -name VERILOG_FILE pdp1_vga_crt.v
 set_global_assignment -name VERILOG_FILE keyboard.v
 set_global_assignment -name VERILOG_FILE cpu.v
-set_global_assignment -name SYSTEMVERILOG_FILE "PDP1-Spacewar.sv"
+set_global_assignment -name SYSTEMVERILOG_FILE "pdp1.sv"
 set_global_assignment -name QIP_FILE apll.qip
 set_global_assignment -name OPTIMIZATION_TECHNIQUE SPEED
 set_global_assignment -name PHYSICAL_SYNTHESIS_COMBO_LOGIC ON

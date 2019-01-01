@@ -12,7 +12,8 @@ module keyboard (
    output reg  [5:0]  selected_ptr_x,
    output reg  [4:0]  selected_ptr_y,
 
-   output reg  [1:0]  current_output_device
+   output reg  [1:0]  current_output_device,
+   output reg  [7:0]  joystick_emu
 );
 
 
@@ -27,7 +28,7 @@ reg [1:0] active_switches;
 
 `define key_assign(code)  keyboard_buffer[kbdbuf_write_ptr] <= { current_case, code }
 `include "definitions.v"
-     
+    
 always @(posedge clk) begin  
    pressed <= ps2_key[9];
    current_key_state <= ps2_key[10];
@@ -153,6 +154,23 @@ always @(posedge clk) begin
       kbd_read_strobe <= 1'b0;
    end
 
+end
+
+/* Enable using the keyboard as controller for spacewar */
+always @(posedge clk) begin     
+   if(old_state != current_key_state) begin        
+      casex(ps2_key[8:0])
+         8'h1D: joystick_emu[0] <= pressed; // w, fire
+         8'h1C: joystick_emu[1] <= pressed; // a, left
+         8'h1B: joystick_emu[2] <= pressed; // s, thrust
+         8'h23: joystick_emu[3] <= pressed; // d, right
+         
+         8'h43: joystick_emu[4] <= pressed; // i, fire
+         8'h3B: joystick_emu[5] <= pressed; // j, left
+         8'h42: joystick_emu[6] <= pressed; // k, thrust
+         8'h4B: joystick_emu[7] <= pressed; // l, right        
+      endcase
+   end
 end
 
 endmodule

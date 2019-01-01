@@ -70,7 +70,7 @@ localparam CONF_STR = {
    "O4,Hardware multiply,No,Yes;",
    "-;",
    "O8,Var. brightness,Yes,No;",  
-	"O9,CRT wait,No,Yes;",
+   "O9,CRT wait,No,Yes;",
    "-;", 
    "J,Left,Right,Thrust,Fire,HyperSpace;",
    "V,v1.00.",`BUILD_DATE
@@ -132,6 +132,7 @@ wire [9:0]  pixel_x_addr_wire, pixel_y_addr_wire;                    /* Lines co
 wire [2:0]  pixel_brightness_wire;
 wire        pixel_shift_wire;
 
+wire [7:0]  joystick_emu;                                            /* Output from keyboard module to feed in as spacewar controls */
 
 //////////////////  REGISTERS  ////////////////////
 
@@ -157,8 +158,8 @@ reg [10:0] horizontal_counter, vertical_counter;                     /* Position
 
 /////////////////  ASSIGNMENTS  ///////////////////
 
-assign HDMI_ARX = `menu_aspect_ratio ? 8'd5  : 8'd16;
-assign HDMI_ARY = `menu_aspect_ratio ? 8'd4  : 8'd9;
+assign HDMI_ARX = `menu_aspect_ratio ? 8'd16  : 8'd5;
+assign HDMI_ARY = `menu_aspect_ratio ? 8'd9   : 8'd4;
 
 assign LED_USER = key_was_processed_w;
 
@@ -176,17 +177,17 @@ assign HDMI_VS  = VGA_VS;
 assign HDMI_SL  = 0;
 
 /* Convert joystick / keyboard commands into PDP1 spacewar IO register 18-bit word */
-assign io_word = {joystick_0[1] | joystick_0[`joystick_left]   | joystick_0[`joystick_hyperspace],       /* Hyperspace is triggered when both left */
-                  joystick_0[0] | joystick_0[`joystick_right]  | joystick_0[`joystick_hyperspace],       /* and right are pressed simultaneously.  */
-                  joystick_0[2] | joystick_0[`joystick_thrust], 
-                  joystick_0[3] | joystick_0[`joystick_fire],
+assign io_word = {joystick_0[1] | joystick_emu[1] | joystick_0[`joystick_left]   | joystick_0[`joystick_hyperspace],       /* Hyperspace is triggered when both left */
+                  joystick_0[0] | joystick_emu[3] | joystick_0[`joystick_right]  | joystick_0[`joystick_hyperspace],       /* and right are pressed simultaneously.  */
+                  joystick_0[2] | joystick_emu[2] | joystick_0[`joystick_thrust], 
+                  joystick_0[3] | joystick_emu[0] | joystick_0[`joystick_fire],
                       
                   {10{1'b0}}, 
                       
-                  joystick_1[1] | joystick_1[`joystick_left]   | joystick_1[`joystick_hyperspace], 
-                  joystick_1[0] | joystick_1[`joystick_right]  | joystick_1[`joystick_hyperspace],
-                  joystick_1[2] | joystick_1[`joystick_thrust],  
-                  joystick_1[3] | joystick_1[`joystick_fire]
+                  joystick_1[1] | joystick_emu[5] | joystick_1[`joystick_left]   | joystick_1[`joystick_hyperspace], 
+                  joystick_1[0] | joystick_emu[7] | joystick_1[`joystick_right]  | joystick_1[`joystick_hyperspace],
+                  joystick_1[2] | joystick_emu[6] | joystick_1[`joystick_thrust],  
+                  joystick_1[3] | joystick_emu[4] | joystick_1[`joystick_fire]
                };
                
 ///////////////////  MODULES  /////////////////////
@@ -223,6 +224,7 @@ keyboard keyboard(
    .console_switches(console_switches),
    .kbd_char_out(kbd_char_out),
    .current_output_device(current_output_device),
+   .joystick_emu(joystick_emu),
       
    .selected_ptr_x(selected_ptr_x),
    .selected_ptr_y(selected_ptr_y)
@@ -302,7 +304,7 @@ pdp1_vga_crt type30_crt(
    .blue_out(b_crt),
                    
    .pixel_available(pixel_shift_wire),
-	
+   
    .pixel_x_i(pixel_x_addr_wire),
    .pixel_y_i(pixel_y_addr_wire),
    .pixel_brightness(pixel_brightness_wire),
@@ -470,7 +472,7 @@ always @(posedge clk_108) begin
    VGA_HS <= ((horizontal_counter >= `h_front_porch )  && (horizontal_counter < `h_front_porch + `h_sync_pulse)) ? 1'b0 : 1'b1;
    VGA_VS <= ((vertical_counter   >= `v_front_porch )  && (vertical_counter   < `v_front_porch + `v_sync_pulse)) ? 1'b0 : 1'b1;
    
-   VGA_DE <= ~((horizontal_counter < `h_visible_offset) | (vertical_counter < `v_visible_offset));	
+   VGA_DE <= ~((horizontal_counter < `h_visible_offset) | (vertical_counter < `v_visible_offset)); 
    
    horizontal_counter <= horizontal_counter + 1'b1;      
 

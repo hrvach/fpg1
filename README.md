@@ -29,6 +29,10 @@ This image is made by recording video output from the FPGA board.
 
 [![video demonstration](images/ytlink.png)](https://www.youtube.com/watch?v=iymD9eysqXo)
 
+## Music reproduction
+
+The original PDP-1 can play music, so it would only make sense the replica can do it too. Despite still heavily under construction, you can listen how the FPG-1 performs some Mozart by clicking on the [following LINK to YouTube video](https://www.youtube.com/watch?v=ROPyR-tV7A4). It features 4 independent voices!
+
 ## Install
 
 Copy .rbf to the root of your SD card and load it. Spacewar! is preloaded in memory and will launch immediately. Any other software you will need to load as a paper tape image from the OSD menu.

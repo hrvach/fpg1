@@ -179,6 +179,10 @@ A. It's a hobby.
 
 A. You might not be the target audience. :-)
 
+##### Q. How much SDRAM is needed to run the core?
+
+A. It doesn't use SDRAM at all, so any MiSTer version should be fine.
+
 ## Known issues and missing features
 
 - Missing RPA instruction for reading ascii from paper tape

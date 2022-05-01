@@ -137,7 +137,7 @@ Switches on the bottom row are drawn individually and are controlled by function
 
 * **Minskytron** - You need to set the test word switches before running, one suggested setting is "110 111 111 111 010 001".
 
-* **DDT** - Load and check the [usage manual](http://archive.computerhistory.org/projects/pdp-1/text/DEC.pdp_1.1964.102650078.pdf) from computerhistory.org
+* **DDT** - Load and check the [usage manual](https://www.computerhistory.org/pdp-1/_media/pdf/DEC.pdp_1.1964.102650078.pdf) from computerhistory.org
 
 * **Spacewar 4.1** - Hardware multiply on, variable brightness on, CRT wait is not needed.
 

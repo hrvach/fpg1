@@ -17,7 +17,16 @@ module keyboard (
 );
 
 
-reg  pressed, current_key_state, old_state, current_case;
+reg  pressed, current_key_state, old_state;
+
+reg current_case;
+wire next_case;
+reg  [1:0] current_shift_pressed;
+wire [1:0] shift_pressed;
+
+assign shift_pressed[0] = ps2_key[7:0] == 8'h12 ? pressed : current_shift_pressed[0];
+assign shift_pressed[1] = ps2_key[7:0] == 8'h59 ? pressed : current_shift_pressed[1];
+assign next_case = |shift_pressed;
 
 reg [6:0] keyboard_buffer[7:0];
 reg [2:0] kbdbuf_read_ptr  = 3'b0;
@@ -38,12 +47,12 @@ always @(posedge clk) begin
    old_state <= current_key_state;
    old_key_was_processed <= key_was_processed;
 
-   if(old_state != current_key_state) begin
+   if (old_state != current_key_state) begin
 
       if (pressed && (current_output_device == `output_teletype)) // Write to write ptr buffer only if outputting to tty
          kbdbuf_write_ptr <= kbdbuf_write_ptr + 1'b1;
 
-      if(~pressed)                                               // Changed, was if(~pressed), TEST!
+      if (~pressed)                                               // Changed, was if(~pressed), TEST!
          kbd_read_strobe <= 1'b0;
 
       /* Keys for typewriter emulation and console */
@@ -123,19 +132,19 @@ always @(posedge clk) begin
 
          /* Controls for navigating cursor through console switches */
 
-         8'h74: selected_ptr_x                         <= selected_ptr_x + pressed;              
+         8'h74: selected_ptr_x                         <= selected_ptr_x + pressed;
          8'h6B: selected_ptr_x                         <= selected_ptr_x - pressed;
 
          8'h12,   /* Left shift / right shift */
          8'h59:
          begin
-               current_case <= pressed;      // Toggle lowercase / uppercase letters
+            if (current_case != next_case) begin
+               keyboard_buffer[kbdbuf_write_ptr] <= next_case ? 6'o74 : 6'o72;
+               kbdbuf_write_ptr <= kbdbuf_write_ptr + 1'b1;
+            end else kbdbuf_write_ptr <= kbdbuf_write_ptr;
 
-               if (current_case != pressed)
-               begin
-                  keyboard_buffer[kbdbuf_write_ptr] <= pressed ? 6'o74 : 6'o72;
-                  kbdbuf_write_ptr <= kbdbuf_write_ptr + 1'b1;
-               end
+            current_case <= next_case;
+            current_shift_pressed <= shift_pressed;
          end
 
          /* If key not recognized, don't increment write pointer */

@@ -406,7 +406,7 @@ begin
             || (|instruction[2:0] && ~&instruction[2:0] && PF[instruction[2:0]] == 0)         /* Skip on ZERO Program Flag     (szf) */
             || (instruction[2:0] == 3'b111 && PF == 0)                          /* Skip on ZERO Program Flag all (szf) */
 
-            || (|instruction[5:3] && ~&instruction[5:3] && sense_switches[instruction[5:3]] == 0)        /* Skip on ZERO Switch addr 1-6   (szs) */
+            || (|instruction[5:3] && ~&instruction[5:3] && sense_switches[6 - instruction[5:3]] == 0)  /* Skip on ZERO Switch addr 1-6   (szs) */
             || (instruction[5:3] == 3'b111 && sense_switches == 0)                          /* Skip on ZERO Switch  addr 7   (szs) */
             );
 

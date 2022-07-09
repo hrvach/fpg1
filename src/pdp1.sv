@@ -19,7 +19,7 @@
 //============================================================================
 
 module emu
-(   
+(
    input             CLK_50M,                /* Master input clock */
    input             RESET,                  /* Reset signal from top module */
    inout      [44:0] HPS_BUS,                /* Connection to hps_io module */
@@ -32,7 +32,7 @@ module emu
    output  reg       VGA_HS,
    output  reg       VGA_VS,
    output  reg       VGA_DE,                 /* = ~(VBlank | HBlank) */
-   
+
    output            HDMI_CLK,               /* Equals VGA_CLK */
    output            HDMI_CE,                /* Equals VGA_CE */
    output      [7:0] HDMI_R,
@@ -43,7 +43,7 @@ module emu
    output            HDMI_DE,                /* Equals VGA_DE */
    output      [1:0] HDMI_SL,                /* Scanlines fx */
 
-   
+
    output      [7:0] HDMI_ARX,               /* Video aspect ratio for HDMI. Can be 5:4 (1280 x 1024 @ 60 Hz) or 16:9 */
    output      [7:0] HDMI_ARY,
 
@@ -56,22 +56,22 @@ module emu
    output            AUDIO_S                 /* 1 - signed audio samples, 0 - unsigned */
 );
 
-`include "build_id.v" 
+`include "build_id.v"
 localparam CONF_STR = {
    "PDP1;;",
    "-;",
    "F,PDPRIMBIN;",
    "T5,Enable RIM mode;",
-   "T6,Disable RIM mode;", 
+   "T6,Disable RIM mode;",
    "-;",
    "R7,Reset;",
    "-;",
    "O1,Aspect Ratio,Original,Wide;",
    "O4,Hardware multiply,No,Yes;",
    "-;",
-   "O8,Var. brightness,Yes,No;",  
+   "O8,Var. brightness,Yes,No;",
    "O9,CRT wait,No,Yes;",
-   "-;", 
+   "-;",
    "J,Left,Right,Thrust,Fire,HyperSpace;",
    "V,v1.00.",`BUILD_DATE
 };
@@ -111,13 +111,13 @@ wire  [5:0] sense_switches;
 wire [15:0] joystick_0, joystick_1;                                  /* Pressed keys on joysticks */
 
 wire  [6:0] char_output_w, kbd_char_out;                             /* Pressed keys to typewriter VGA out */
-wire        char_strobe_w, halt_w, key_was_processed_w;              /* Strobe / ACK signalling of pressed keys */
-                        
+wire        char_strobe_w, key_was_processed_w;                      /* Strobe / ACK signalling of pressed keys */
+
 wire [17:0] test_word, test_address, AC_out, IO_out, DI_out;         /* Provide signals for console */
 wire [11:0] PC_out, AB_out;
 
 wire  [7:0] r_crt, g_crt, b_crt,                                     /* Per-device RGB signals, for CRT, Teletype and Console emulation */
-            r_tty, g_tty, b_tty, 
+            r_tty, g_tty, b_tty,
             r_con, g_con, b_con;
 
 wire  [5:0] selected_ptr_x;                                          /* Cursor coordinates for toggling console test switches */
@@ -141,14 +141,13 @@ reg        ioctl_wait = 0;                                           /* When 1, 
 
 reg        current_case;                                             /* 0 = lowercase currently active, 1 = uppercase active */
 reg  [1:0] current_output;                                           /* What device video output is active? Can be CRT, Typewriter or Console */
-reg  [0:0] cpu_running = 1'b1;                                       /* If set to 0, cpu is paused */
 
 reg [11:0] write_address = 12'd0;                                    /* Addresses for writing to memory and start jump location after loading a program in RIM mode or RESET */
 reg [11:0] start_address = 12'd4;
 
 reg [17:0] tape_rcv_word,                                            /* tape_rcv_word used to store received binary word from tape */
            io_word;                                                  /* io_word used to provide spacewar gamepad controls */
-           
+
 reg        write_enable, rim_mode_enabled;                           /* Enables writing to memory or activating the read in mode (i.e. something like a paper tape bootloader) */
 
 reg [35:0] tape_read_buffer = 36'b0;                                 /* Buffer for storing lines received from paper tape */
@@ -179,17 +178,17 @@ assign HDMI_SL  = 0;
 /* Convert joystick / keyboard commands into PDP1 spacewar IO register 18-bit word */
 assign io_word = {joystick_0[1] | joystick_emu[1] | joystick_0[`joystick_left]   | joystick_0[`joystick_hyperspace],       /* Hyperspace is triggered when both left */
                   joystick_0[0] | joystick_emu[3] | joystick_0[`joystick_right]  | joystick_0[`joystick_hyperspace],       /* and right are pressed simultaneously.  */
-                  joystick_0[2] | joystick_emu[2] | joystick_0[`joystick_thrust], 
+                  joystick_0[2] | joystick_emu[2] | joystick_0[`joystick_thrust],
                   joystick_0[3] | joystick_emu[0] | joystick_0[`joystick_fire],
-                      
-                  {10{1'b0}}, 
-                      
-                  joystick_1[1] | joystick_emu[5] | joystick_1[`joystick_left]   | joystick_1[`joystick_hyperspace], 
+
+                  {10{1'b0}},
+
+                  joystick_1[1] | joystick_emu[5] | joystick_1[`joystick_left]   | joystick_1[`joystick_hyperspace],
                   joystick_1[0] | joystick_emu[7] | joystick_1[`joystick_right]  | joystick_1[`joystick_hyperspace],
-                  joystick_1[2] | joystick_emu[6] | joystick_1[`joystick_thrust],  
+                  joystick_1[2] | joystick_emu[6] | joystick_1[`joystick_thrust],
                   joystick_1[3] | joystick_emu[4] | joystick_1[`joystick_fire]
                };
-               
+
 ///////////////////  MODULES  /////////////////////
 
 
@@ -207,10 +206,10 @@ hps_io #(.STRLEN($size(CONF_STR)>>3), .PS2DIV(200)) hps_io
 
    .ioctl_index(ioctl_index),
    .ioctl_wait(ioctl_wait),
-         
+
    .joystick_0(joystick_0),
    .joystick_1(joystick_1),
-   
+
    .ps2_key(ps2_key)
 );
 
@@ -218,55 +217,55 @@ keyboard keyboard(
    .clk(CLK_50M),
    .ps2_key(ps2_key),
    .key_was_processed(key_was_processed_w),
-      
+
    .kbd_read_strobe(kbd_read_strobe),
    .console_switch_strobe(console_switch_strobe),
    .console_switches(console_switches),
    .kbd_char_out(kbd_char_out),
    .current_output_device(current_output_device),
    .joystick_emu(joystick_emu),
-      
+
    .selected_ptr_x(selected_ptr_x),
    .selected_ptr_y(selected_ptr_y)
 );
 
 
 pdp1_vga_typewriter typewriter (
-   .clk(clk_108), 
-          
+   .clk(clk_108),
+
    .horizontal_counter(horizontal_counter),
    .vertical_counter(vertical_counter),
 
    .red_out(r_tty),
-   .green_out(g_tty), 
+   .green_out(g_tty),
    .blue_out(b_tty),
-             
+
    .char_in_kbd(kbd_char_out),
    .char_in_pdp(char_output_w),
-             
+
    .have_typewriter_data(char_strobe_w),
    .have_keyboard_data(kbd_read_strobe)
 );
 
 
 pdp1_vga_console console (
-   .clk(clk_108), 
-             
+   .clk(clk_108),
+
    .horizontal_counter(horizontal_counter),
    .vertical_counter(vertical_counter),
-             
+
    .red_out(r_con),
-   .green_out(g_con), 
+   .green_out(g_con),
    .blue_out(b_con),
-             
+
    .selected_ptr_x(selected_ptr_x),
-   .selected_ptr_y(selected_ptr_y),       
+   .selected_ptr_y(selected_ptr_y),
    .console_switch_strobe(console_switch_strobe),
-             
+
    .sense_switches(sense_switches),
    .test_word(test_word),
    .test_address(test_address),
-             
+
    .console_switches(console_switches),
 
    .PC_in(PC_out),
@@ -280,12 +279,12 @@ pdp1_vga_console console (
 
 
 pdp1_main_ram ram_memory(
-   .address_a(AB_out), 
-   .clock_a(CLK_50M), 
+   .address_a(AB_out),
+   .clock_a(CLK_50M),
    .data_a(data_out),
-   .wren_a(ram_write_enable), 
+   .wren_a(ram_write_enable),
    .q_a(DI_out),
-                         
+
    .clock_b(CLK_50M),
    .address_b(write_address),
    .data_b(tape_rcv_word),
@@ -294,17 +293,17 @@ pdp1_main_ram ram_memory(
 
 
 pdp1_vga_crt type30_crt(
-   .clk(clk_108), 
-      
+   .clk(clk_108),
+
    .horizontal_counter(horizontal_counter),
    .vertical_counter(vertical_counter),
-             
+
    .red_out(r_crt),
-   .green_out(g_crt), 
+   .green_out(g_crt),
    .blue_out(b_crt),
-                   
+
    .pixel_available(pixel_shift_wire),
-   
+
    .pixel_x_i(pixel_x_addr_wire),
    .pixel_y_i(pixel_y_addr_wire),
    .pixel_brightness(pixel_brightness_wire),
@@ -313,61 +312,49 @@ pdp1_vga_crt type30_crt(
 
 
 cpu pdp1_cpu(
-   .clk(CLK_50M), 
-   .rst(RESET | rim_mode_enabled | `menu_reset), 
-   .MEM_ADDR(AB_out), 
-   .DI(DI_out), 
-   .MEM_BUFF(data_out), 
+   .clk(CLK_50M),
+   .rst(RESET | rim_mode_enabled | `menu_reset),
+   .MEM_ADDR(AB_out),
+   .DI(DI_out),
+   .MEM_BUFF(data_out),
    .WRITE_ENABLE(ram_write_enable),
-      
+
    .PC(PC_out),
    .AC(AC_out),
    .IO(IO_out),
    .BUS_out(BUS_out),
-                      
+
    .pixel_x_out(pixel_x_addr_wire),
    .pixel_y_out(pixel_y_addr_wire),
    .pixel_shift_out(pixel_shift_wire),
    .pixel_brightness(pixel_brightness_wire),
-             
+
    .gamepad_in(io_word),
-          
+
    .start_address(start_address),
-             
+
    .typewriter_char_out(char_output_w),
    .typewriter_strobe_out(char_strobe_w),
-             
+
    .typewriter_char_in(kbd_char_out),
    .typewriter_strobe_in(kbd_read_strobe),
    .typewriter_strobe_ack(key_was_processed_w),
-             
+
    .send_next_tape_char(send_next_tape_char),
    .is_char_available(ioctl_wait),
    .tape_rcv_word(tape_rcv_word),
-             
+
    .sense_switches(sense_switches),
    .test_word(test_word),
    .test_address(test_address),
-             
-   .halt(halt_w),
-   .cpu_running(cpu_running & ~`power_switch),
-          
    .console_switches(console_switches),
-         
+
    .crt_wait(`menu_crt_wait),
-   .hw_mul_enabled(hw_mul_enabled)            
-);       
+   .hw_mul_enabled(hw_mul_enabled)
+);
 
 
 ////////////////  ALWAYS BLOCKS  //////////////////
-
-always @(posedge CLK_50M) begin
-   if (`continue_button || `start_button)
-      cpu_running <= 1'b1;
-   
-   if (`stop_button)
-      cpu_running <= 1'b0;      
-end
 
 /* Tape RIM loader and memory image loader */
 
@@ -376,115 +363,114 @@ always @(posedge CLK_50M) begin
         reg       old_send_next_tape_char;
 
         /* In RIM mode, these two instructions write code to memory (dio) and then jump to beginning to execute (jmp) */
-        localparam jmp   = 6'o60,    
+        localparam jmp   = 6'o60,
                    dio   = 6'o32;
-        
+
         old_send_next_tape_char <= send_next_tape_char;
         old_download <= ioctl_download;
         write_enable <= 1'b0;
 
-        if (`menu_enable_rim || `readin_button)  
+        if (`menu_enable_rim || `readin_button)
             rim_mode_enabled <= 1'b1;
-        
-        else if (`menu_disable_rim) 
+
+        else if (`menu_disable_rim)
         begin
-            rim_mode_enabled <= 1'b0;                                                     
+            rim_mode_enabled <= 1'b0;
             ioctl_wait <= 1'b0;
         end
-        
+
         if(~old_download && ioctl_download) begin
                 cnt <= 8'b0;
                 timeout <= 32'b0;
-        end         
-        
+        end
+
         timeout <= timeout + 1'b1;
-           
-        /* 8th bit must be a one in binary mode. If not, don't even increment counter - simply ignore it */    
-        if(ioctl_wr && ioctl_dout[7]) begin                 
+
+        /* 8th bit must be a one in binary mode. If not, don't even increment counter - simply ignore it */
+        if(ioctl_wr && ioctl_dout[7]) begin
             tape_read_buffer <= { tape_read_buffer[29:0], ioctl_dout[5:0] };         /* Shift in 6 bits */
             cnt <= cnt + 1'b1;
             timeout <= rim_mode_enabled ? 'b0 : timeout;
-        end   
-              
-        
-        /* Make one 18-bit word from every 3 bytes, enable write and raise ioctl_wait to skip read in next clock cycle */            
+        end
 
-        if (! rim_mode_enabled) 
+
+        /* Make one 18-bit word from every 3 bytes, enable write and raise ioctl_wait to skip read in next clock cycle */
+
+        if (! rim_mode_enabled)
         begin
             if (cnt == 8'd3)  // We read enough data to form a word, ioctl_wait will be cleared when send_next_tape_char is pulsed
             begin
                ioctl_wait <= 1'b1;  // We received a character, don't receive anymore until the CPU reads it
                tape_rcv_word <= tape_read_buffer[17:0];
-               tape_read_buffer <= 36'b0;       
-               cnt <= 8'b0;               
+               tape_read_buffer <= 36'b0;
+               cnt <= 8'b0;
             end
 
-            /* Detect falling edge of send_next_tape_char input from CPU, that means we can proceed with receiving */          
-            if (old_send_next_tape_char && ~send_next_tape_char) begin 
-               ioctl_wait <= 0;                 
+            /* Detect falling edge of send_next_tape_char input from CPU, that means we can proceed with receiving */
+            if (old_send_next_tape_char && ~send_next_tape_char) begin
+               ioctl_wait <= 0;
             end
 
         end
-        
+
         /* RIM loader mode */
-        else 
-        begin          
+        else
+        begin
             if (cnt == 8'd6)
             begin
-               cnt <= 8'b0;               
+               cnt <= 8'b0;
 
                if (tape_read_buffer[35:30] == jmp) begin
                   start_address <= tape_read_buffer[29:18];
-                  rim_mode_enabled <= 1'b0;                 
-                  
-                  tape_rcv_word <= tape_read_buffer[17:0];                                   
-                  ioctl_wait <= 1'b1;  // We received a character, don't receive anymore until the CPU reads it                  
-               end
-               
-               
-               if (tape_read_buffer[35:30] == dio) begin             
-                  write_address <= tape_read_buffer[29:18];
+                  rim_mode_enabled <= 1'b0;
+
                   tape_rcv_word <= tape_read_buffer[17:0];
-                  write_enable <= 1'b1;      
+                  ioctl_wait <= 1'b1;  // We received a character, don't receive anymore until the CPU reads it
                end
 
-               tape_read_buffer <= 36'b0;       
+
+               if (tape_read_buffer[35:30] == dio) begin
+                  write_address <= tape_read_buffer[29:18];
+                  tape_rcv_word <= tape_read_buffer[17:0];
+                  write_enable <= 1'b1;
+               end
+
+               tape_read_buffer <= 36'b0;
             end
-         
+
         end
-        
+
         /* Timeout after last successful read should not exceed 1 s */
         if(!ioctl_download || timeout > 32'd50000000) ioctl_wait <= 0;
 end
 
 
 /* Video generation */
-         
+
 always @(posedge clk_108) begin
    case (current_output_device)
       `output_crt:      {VGA_R, VGA_G, VGA_B} <= {r_crt, g_crt, b_crt};
-      `output_console:  {VGA_R, VGA_G, VGA_B} <= {r_con, g_con, b_con};    
-      `output_teletype: {VGA_R, VGA_G, VGA_B} <= {r_tty, g_tty, b_tty};          
-   endcase  
+      `output_console:  {VGA_R, VGA_G, VGA_B} <= {r_con, g_con, b_con};
+      `output_teletype: {VGA_R, VGA_G, VGA_B} <= {r_tty, g_tty, b_tty};
+   endcase
 
    /* Common video routines for generating blanking and sync signals */
 
    VGA_HS <= ((horizontal_counter >= `h_front_porch )  && (horizontal_counter < `h_front_porch + `h_sync_pulse)) ? 1'b0 : 1'b1;
    VGA_VS <= ((vertical_counter   >= `v_front_porch )  && (vertical_counter   < `v_front_porch + `v_sync_pulse)) ? 1'b0 : 1'b1;
-   
-   VGA_DE <= ~((horizontal_counter < `h_visible_offset) | (vertical_counter < `v_visible_offset)); 
-   
-   horizontal_counter <= horizontal_counter + 1'b1;      
 
-   if (horizontal_counter == `h_line_timing) 
+   VGA_DE <= ~((horizontal_counter < `h_visible_offset) | (vertical_counter < `v_visible_offset));
+
+   horizontal_counter <= horizontal_counter + 1'b1;
+
+   if (horizontal_counter == `h_line_timing)
    begin
-       vertical_counter <= vertical_counter + 1'b1;                
+       vertical_counter <= vertical_counter + 1'b1;
        horizontal_counter <= 11'b0;
    end
-   
-   if (vertical_counter == `v_line_timing) 
-       vertical_counter <= 11'b0;                  
+
+   if (vertical_counter == `v_line_timing)
+       vertical_counter <= 11'b0;
 end
 
 endmodule
-	
